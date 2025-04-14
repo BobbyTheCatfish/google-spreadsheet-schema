@@ -11,7 +11,6 @@ class Schema<t> extends Collection<string, t> {
     constructor (primaryKey: string, mapper: Mapper<t>) {
         super()
         this.mapper = mapper;
-        const defaultFilter = (r: GoogleSpreadsheetRow) => true
         this.rows = [];
         this.primaryKey = primaryKey;
     }
