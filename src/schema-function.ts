@@ -1,9 +1,10 @@
-import { GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from 'google-spreadsheet'
-import { Collection } from '@discordjs/collection'
+import { Collection } from "@discordjs/collection";
+import { GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from "google-spreadsheet";
+import { Filter, Mapper } from "./utils";
+export { Filter, Mapper } from "./utils";
 
-type Mapper<t> = (row: GoogleSpreadsheetRow) => t
-type Filter = (row: GoogleSpreadsheetRow) => (boolean | null | undefined)
-class Schema<t> extends Collection<string, t> {
+
+export default class FunctionSchema<t> extends Collection<string, t> {
     rows: GoogleSpreadsheetRow[]
     primaryKey: string;
     mapper: Mapper<t>
@@ -15,7 +16,7 @@ class Schema<t> extends Collection<string, t> {
         this.primaryKey = primaryKey;
     }
 
-    async load(sheet: GoogleSpreadsheetWorksheet, filter: Filter = (r) => true, useExistingData = false) {
+    async load(sheet: GoogleSpreadsheetWorksheet, filter: Filter = () => true, useExistingData = false) {
         if (!useExistingData || sheet.rowCount === 0) {
             this.rows = await sheet.getRows();
         }
@@ -27,5 +28,3 @@ class Schema<t> extends Collection<string, t> {
         }
     }
 }
-
-export = Schema
