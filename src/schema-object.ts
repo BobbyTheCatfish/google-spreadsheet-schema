@@ -22,10 +22,12 @@ type TypeMap = {
     date: Date;
 };
 
+type OptionalNull<T extends Schema, K extends keyof T> = T[K]["possiblyNull"] extends true ? null : never
+
 type FieldType<T extends Schema, K extends keyof T> = TypeMap[T[K]["type"]]
 
 type ParsedRow<T extends Schema> = {
-    [K in keyof T]: T[K]["arraySplitter"] extends string ? FieldType<T, K>[] : FieldType<T, K>;
+    [K in keyof T]: (T[K]["arraySplitter"] extends string ? FieldType<T, K>[] : FieldType<T, K>) | OptionalNull<T, K>;
 };
 
 export default class ObjectSchema<T extends Schema> extends Collection<string, ParsedRow<T>> {
