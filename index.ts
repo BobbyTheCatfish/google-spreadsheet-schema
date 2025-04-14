@@ -7,24 +7,22 @@ class Schema<t> extends Collection<string, t> {
     rows: GoogleSpreadsheetRow[]
     primaryKey: string;
     mapper: Mapper<t>
-    rowFilter: Filter
 
-    constructor (primaryKey: string, mapper: Mapper<t>, filter?: Filter) {
+    constructor (primaryKey: string, mapper: Mapper<t>) {
         super()
         this.mapper = mapper;
         const defaultFilter = (r: GoogleSpreadsheetRow) => true
-        this.rowFilter = filter || defaultFilter;
         this.rows = [];
         this.primaryKey = primaryKey;
     }
 
-    async load(sheet: GoogleSpreadsheetWorksheet, useExistingData = false) {
+    async load(sheet: GoogleSpreadsheetWorksheet, filter: Filter = (r) => true, useExistingData = false) {
         if (!useExistingData || sheet.rowCount === 0) {
             this.rows = await sheet.getRows();
         }
         this.clear()
         for (const row of this.rows) {
-            if (this.rowFilter(row)) {
+            if (filter(row)) {
                 this.set(row.get(this.primaryKey), this.mapper(row))
             }
         }

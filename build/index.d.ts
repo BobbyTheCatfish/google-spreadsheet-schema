@@ -6,8 +6,7 @@ declare class Schema<t> extends Collection<string, t> {
     rows: GoogleSpreadsheetRow[];
     primaryKey: string;
     mapper: Mapper<t>;
-    rowFilter: Filter;
-    constructor(primaryKey: string, mapper: Mapper<t>, filter?: Filter);
-    load(sheet: GoogleSpreadsheetWorksheet, useExistingData?: boolean): Promise<void>;
+    constructor(primaryKey: string, mapper: Mapper<t>);
+    load(sheet: GoogleSpreadsheetWorksheet, filter?: Filter, useExistingData?: boolean): Promise<void>;
 }
 export = Schema;
