@@ -52,36 +52,39 @@ export default class ObjectSchema<T extends Schema> extends Collection<string, P
             }
         }
     }
+
     private valueMapper(value: any, type: SupportedTypes) {
         switch (type) {
-            case "number":
-                value = parseFloat(value);
-                break;
-            case "boolean":
-                value = value.toUpperCase() === "TRUE" || value === true;
-                break;
-            case "string":
-                value = String(value);
-                break;
-            case "date":
-                value = new Date(value)
-                break;
+            case "number": return parseFloat(value);
+            case "boolean": return value.toUpperCase() === "TRUE" || value === true;
+            case "string": return String(value);
+            case "date": return new Date(value);
             default:
                 throw new Error(`Unsupported type: ${type}`);
         }
-        return value;
     }
+
+    private isBlank(v: any) {
+        return ["", undefined, null].includes(v)
+    }
+
     private parseRow(row: GoogleSpreadsheetRow): ParsedRow<T> {
         const result: any = {};
         for (const field in this.schema) {
-            const { type, key, arraySplitter } = this.schema[field];
+            const { type, key, arraySplitter, possiblyNull } = this.schema[field];
             let value = row.get(key);
             if (arraySplitter) {
                 value = value
                     .split(arraySplitter)
+                    .filter((v: any) => !this.isBlank(v))
                     .map((v: any) => this.valueMapper(v, type))
             } else {
-                value = this.valueMapper(value, type)
+                if (this.isBlank(value)) {
+                    if (possiblyNull) value = null;
+                    else throw new Error(`Value for \`${field}\` was null when not expected`);
+                } else {
+                    value = this.valueMapper(value, type)
+                }
             }
  
             result[field] = value;
