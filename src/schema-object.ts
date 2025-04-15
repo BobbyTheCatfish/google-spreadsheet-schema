@@ -47,8 +47,9 @@ export default class ObjectSchema<T extends Schema> extends Collection<string, P
         }
         this.clear()
         for (const row of this.rows) {
-            if (filter(row)) {
-                this.set(row.get(this.primaryKey), this.parseRow(row))
+            const key = row.get(this.primaryKey)
+            if (key && filter(row)) {
+                this.set(key, this.parseRow(row))
             }
         }
     }

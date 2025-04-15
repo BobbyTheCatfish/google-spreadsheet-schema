@@ -22,8 +22,9 @@ export default class FunctionSchema<t> extends Collection<string, t> {
         }
         this.clear()
         for (const row of this.rows) {
-            if (filter(row)) {
-                this.set(row.get(this.primaryKey), this.mapper(row))
+            const key = row.get(this.primaryKey)
+            if (key && filter(row)) {
+                this.set(key, this.mapper(row))
             }
         }
     }
