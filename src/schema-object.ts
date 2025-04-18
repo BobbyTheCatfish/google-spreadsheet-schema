@@ -33,6 +33,7 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
         else this.rows = await sheet.getRows();
         
         const key = this.schema[this.primaryKey]
+        if (!key.type) key.type = "string";
 
         this.clear()
         for (const row of this.rows) {
