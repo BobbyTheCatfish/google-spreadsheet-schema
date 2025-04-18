@@ -6,7 +6,7 @@ export default class SetSchema<T extends keyof TypeMap = "string"> extends UtilS
     rows: GoogleSpreadsheetRow[]
     key: string
     type: keyof TypeMap
-    constructor(key: string, type?: DefaultType<T>) {
+    constructor(key: string, type?: DefaultType<TypeMap, T, "string">) {
         super();
         this.key = key;
         this.type = type ?? "string"
@@ -31,4 +31,3 @@ export default class SetSchema<T extends keyof TypeMap = "string"> extends UtilS
         }
     }
 }
-

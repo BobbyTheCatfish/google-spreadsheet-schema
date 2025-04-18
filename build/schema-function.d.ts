@@ -1,11 +1,10 @@
 import { Collection } from "@discordjs/collection";
 import { GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from "google-spreadsheet";
-import { Filter, Mapper } from "./utils";
-export { Filter, Mapper } from "./utils";
-export default class FunctionSchema<k, t> extends Collection<k, t> {
+import { Filter, Mapper, AcceptableKeys } from "./utils";
+export default class FunctionSchema<k extends AcceptableKeys, t> extends Collection<k, t> {
     rows: GoogleSpreadsheetRow[];
     primaryKey: string;
-    mapper: Mapper<k, t>;
-    constructor(primaryKey: string, mapper: Mapper<k, t>);
+    mapper: Mapper<t, k>;
+    constructor(primaryKey: string, mapper: Mapper<t, k>);
     load(sheet: GoogleSpreadsheetWorksheet, filter?: Filter, rows?: GoogleSpreadsheetRow[]): Promise<void>;
 }

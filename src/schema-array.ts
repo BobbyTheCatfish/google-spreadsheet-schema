@@ -5,7 +5,7 @@ export default class ArraySchema<T extends keyof TypeMap = "string"> extends Arr
     rows: GoogleSpreadsheetRow[]
     key: string
     type: keyof TypeMap
-    constructor(key: string, type?: DefaultType<T>) {
+    constructor(key: string, type?: DefaultType<TypeMap, T, "string">) {
         super();
         this.key = key;
         this.type = type ?? "string"
