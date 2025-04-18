@@ -1,21 +1,22 @@
 import { Collection } from "@discordjs/collection";
 import { GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from "google-spreadsheet";
-import { DefaultType, Filter, TypeMap, valueMapper } from "./utils";
+import { Filter, TypeMap, valueMapper } from "./utils";
 
-export type ObjectSchemaField = {
-    type: keyof TypeMap;
+export type ObjectSchemaField<T extends keyof TypeMap> = {
+    type: T;
     key: string;
     arraySplitter?: string;
     possiblyNull?: boolean
+    defaultValue?: TypeMap[T]
 };
   
 export type ObjectSchemaBuilder = {
-    [field: string]: ObjectSchemaField;
+    [field: string]: ObjectSchemaField<keyof TypeMap>;
 };
 
 
 
-type OptionalNull<T extends ObjectSchemaBuilder, K extends keyof T> = T[K]["possiblyNull"] extends true ? null : never
+type OptionalNull<T extends ObjectSchemaBuilder, K extends keyof T> = T[K]["possiblyNull"] extends true ? T[K]["defaultValue"] extends null ? null : never : never
 
 type FieldType<T extends ObjectSchemaBuilder, K extends keyof T> = TypeMap[T[K]["type"]]
 
@@ -54,20 +55,18 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder> extends Collect
     private parseRow(row: GoogleSpreadsheetRow): ParsedRow<T> {
         const result: any = {};
         for (const field in this.schema) {
-            const { type, key, arraySplitter, possiblyNull } = this.schema[field];
+            const { type, key, arraySplitter, possiblyNull, defaultValue = null } = this.schema[field];
             let value = row.get(key);
             if (arraySplitter) {
-                value = value
-                    .split(arraySplitter)
-                    .filter((v: any) => !this.isBlank(v))
-                    .map((v: any) => valueMapper(v, type))
-            } else {
-                if (this.isBlank(value)) {
-                    if (possiblyNull) value = null;
-                    else throw new Error(`Value for \`${field}\` was null when not expected`);
-                } else {
-                    value = valueMapper(value, type)
+                const newValues = []
+                for (const v of value.split(arraySplitter)) {
+                    if (this.isBlank(v)) continue;
+                    const newVal = valueMapper(v, type) || defaultValue
+                    if (newVal !== null) newValues.push(newVal)
                 }
+            } else {
+                value = valueMapper(value, type) || defaultValue
+                if (value === null && !possiblyNull) throw new Error(`Value for \`${field}\` was null when not expected`);
             }
  
             result[field] = value;

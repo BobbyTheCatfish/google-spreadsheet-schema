@@ -14,10 +14,20 @@ export type DefaultType<A extends keyof TypeMap | undefined> = undefined extends
 
 export function valueMapper(value: any, type: keyof TypeMap) {
     switch (type) {
-        case "number": return parseFloat(value);
+        case "number": {
+            const num = parseFloat(value);
+            if (isNaN(num)) return null
+            return num;
+        }
         case "boolean": return value.toUpperCase() === "TRUE" || value === true;
         case "string": return String(value);
-        case "date": return new Date(value);
+        case "date": {
+            const num = parseInt(value);
+            if (!isNaN(num)) return new Date(num);
+            const date = new Date(value)
+            if (isNaN(date.valueOf())) return null;
+            return date;
+        }
         default: throw new Error(`Unsupported type: ${type}`);
     }
 }

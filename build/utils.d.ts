@@ -8,4 +8,4 @@ export type TypeMap = {
     date: Date;
 };
 export type DefaultType<A extends keyof TypeMap | undefined> = undefined extends A ? "string" : A extends keyof TypeMap ? A : "string";
-export declare function valueMapper(value: any, type: keyof TypeMap): string | number | boolean | Date;
+export declare function valueMapper(value: any, type: keyof TypeMap): string | number | boolean | Date | null;
