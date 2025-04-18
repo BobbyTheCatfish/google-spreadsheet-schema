@@ -25,7 +25,7 @@ export default class ArraySchema<T extends keyof TypeMap = "string"> extends Arr
         for (const row of this.rows) {
             const key = row.get(this.key)
             if (key && filter(row)) {
-                this.push(valueMapper(row, field) as any)
+                this.push(valueMapper(key, field) as any)
             }
         }
     }

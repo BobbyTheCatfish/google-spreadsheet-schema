@@ -26,7 +26,7 @@ export default class SetSchema<T extends keyof TypeMap = "string"> extends UtilS
         for (const row of this.rows) {
             const key = row.get(this.key)
             if (key && filter(row)) {
-                this.add(valueMapper(row, field) as any)
+                this.add(valueMapper(key, field) as any)
             }
         }
     }

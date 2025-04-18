@@ -35,7 +35,7 @@ class SetSchema extends UtilSet_1.default {
             for (const row of this.rows) {
                 const key = row.get(this.key);
                 if (key && filter(row)) {
-                    this.add((0, utils_1.valueMapper)(row, field));
+                    this.add((0, utils_1.valueMapper)(key, field));
                 }
             }
         });

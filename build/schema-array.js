@@ -31,7 +31,7 @@ class ArraySchema extends Array {
             for (const row of this.rows) {
                 const key = row.get(this.key);
                 if (key && filter(row)) {
-                    this.push((0, utils_1.valueMapper)(row, field));
+                    this.push((0, utils_1.valueMapper)(key, field));
                 }
             }
         });
