@@ -1,5 +1,5 @@
 import { GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from "google-spreadsheet";
-import { DefaultType, Filter, TypeMap, valueMapper } from "./utils";
+import { DefaultType, Filter, ObjectSchemaField, TypeMap, valueMapper } from "./utils";
 
 export default class ArraySchema<T extends keyof TypeMap = "string"> extends Array<TypeMap[T]> {
     rows: GoogleSpreadsheetRow[]
@@ -16,11 +16,16 @@ export default class ArraySchema<T extends keyof TypeMap = "string"> extends Arr
         if (rows) this.rows = rows
         else this.rows = await sheet.getRows();
         
+        const field: ObjectSchemaField<keyof TypeMap> = {
+            key: this.key,
+            type: this.type,
+        }
+
         this.length = 0;
         for (const row of this.rows) {
             const key = row.get(this.key)
             if (key && filter(row)) {
-                this.push(valueMapper(row, this.type) as any)
+                this.push(valueMapper(row, field) as any)
             }
         }
     }

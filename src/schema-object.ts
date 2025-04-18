@@ -1,20 +1,11 @@
 import { Collection } from "@discordjs/collection";
 import { GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from "google-spreadsheet";
-import { Filter, TypeMap, valueMapper } from "./utils";
+import { Filter, ObjectSchemaField, TypeMap, valueMapper } from "./utils";
 
-export type ObjectSchemaField<T extends keyof TypeMap> = {
-    type: T;
-    key: string;
-    arraySplitter?: string;
-    possiblyNull?: boolean
-    defaultValue?: TypeMap[T]
-};
-  
+
 export type ObjectSchemaBuilder = {
     [field: string]: ObjectSchemaField<keyof TypeMap>;
 };
-
-
 
 type OptionalNull<T extends ObjectSchemaBuilder, K extends keyof T> = T[K]["possiblyNull"] extends true ? T[K]["defaultValue"] extends null ? null : never : never
 
@@ -24,11 +15,12 @@ type ParsedRow<T extends ObjectSchemaBuilder> = {
     [K in keyof T]: (T[K]["arraySplitter"] extends string ? FieldType<T, K>[] : FieldType<T, K>) | OptionalNull<T, K>;
 };
 
-export default class ObjectSchema<T extends ObjectSchemaBuilder> extends Collection<string, ParsedRow<T>> {
+export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof T> extends Collection<TypeMap[T[K]["type"]], ParsedRow<T>> {
     schema: T
     rows: GoogleSpreadsheetRow[]
-    primaryKey: string
-    constructor(primaryKey: string, schema: T) {
+    primaryKey: K
+
+    constructor(primaryKey: K, schema: T) {
         super();
         this.schema = schema;
         this.primaryKey = primaryKey;
@@ -38,12 +30,14 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder> extends Collect
     async load(sheet: GoogleSpreadsheetWorksheet, filter: Filter = () => true, rows?: GoogleSpreadsheetRow[]) {
         if (rows) this.rows = rows
         else this.rows = await sheet.getRows();
+        
+        const key = this.schema[this.primaryKey].key
 
         this.clear()
         for (const row of this.rows) {
-            const key = row.get(this.primaryKey)
-            if (key && filter(row)) {
-                this.set(key, this.parseRow(row))
+            const primaryKey = row.get(key)
+            if (primaryKey && filter(row)) {
+                this.set(primaryKey, this.parseRow(row))
             }
         }
     }
@@ -61,12 +55,12 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder> extends Collect
                 const newValues = []
                 for (const v of value?.split(f.arraySplitter) ?? []) {
                     if (this.isBlank(v)) continue;
-                    const newVal = valueMapper(v, f.type);
+                    const newVal = valueMapper(v, f);
                     if (newVal !== null) newValues.push(newVal);
                 }
                 value = newValues;
             } else {
-                value = valueMapper(value, f.type)
+                value = valueMapper(value, f)
                 if (value === null && !f.possiblyNull) throw new Error(`Value for \`${field}\` on row ${row.rowNumber} was null when not expected`);
             }
  

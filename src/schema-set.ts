@@ -1,5 +1,5 @@
 import { GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from "google-spreadsheet";
-import { DefaultType, Filter, TypeMap, valueMapper } from "./utils";
+import { DefaultType, Filter, ObjectSchemaField, TypeMap, valueMapper } from "./utils";
 import UtilSet from "./UtilSet";
 
 export default class SetSchema<T extends keyof TypeMap = "string"> extends UtilSet<TypeMap[T]> {
@@ -17,11 +17,16 @@ export default class SetSchema<T extends keyof TypeMap = "string"> extends UtilS
         if (rows) this.rows = rows
         else this.rows = await sheet.getRows();
 
+        const field: ObjectSchemaField<keyof TypeMap> = {
+            key: this.key,
+            type: this.type,
+        }
+
         this.clear();
         for (const row of this.rows) {
             const key = row.get(this.key)
             if (key && filter(row)) {
-                this.add(valueMapper(row, this.type) as any)
+                this.add(valueMapper(row, field) as any)
             }
         }
     }

@@ -4,12 +4,12 @@ import { Filter, Mapper } from "./utils";
 export { Filter, Mapper } from "./utils";
 
 
-export default class FunctionSchema<t> extends Collection<string, t> {
+export default class FunctionSchema<k, t> extends Collection<k, t> {
     rows: GoogleSpreadsheetRow[]
     primaryKey: string;
-    mapper: Mapper<t>
+    mapper: Mapper<k, t>
 
-    constructor (primaryKey: string, mapper: Mapper<t>) {
+    constructor (primaryKey: string, mapper: Mapper<k, t>) {
         super()
         this.mapper = mapper;
         this.rows = [];
