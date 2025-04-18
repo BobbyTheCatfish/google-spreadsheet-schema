@@ -2,28 +2,28 @@ import { Collection } from "@discordjs/collection";
 import { GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from "google-spreadsheet";
 import { DefaultType, Filter, TypeMap, valueMapper } from "./utils";
 
-type SchemaField = {
+export type ObjectSchemaField = {
     type: keyof TypeMap;
     key: string;
     arraySplitter?: string;
     possiblyNull?: boolean
 };
   
-export type Schema = {
-    [field: string]: SchemaField;
+export type ObjectSchemaBuilder = {
+    [field: string]: ObjectSchemaField;
 };
 
 
 
-type OptionalNull<T extends Schema, K extends keyof T> = T[K]["possiblyNull"] extends true ? null : never
+type OptionalNull<T extends ObjectSchemaBuilder, K extends keyof T> = T[K]["possiblyNull"] extends true ? null : never
 
-type FieldType<T extends Schema, K extends keyof T> = TypeMap[T[K]["type"]]
+type FieldType<T extends ObjectSchemaBuilder, K extends keyof T> = TypeMap[T[K]["type"]]
 
-type ParsedRow<T extends Schema> = {
+type ParsedRow<T extends ObjectSchemaBuilder> = {
     [K in keyof T]: (T[K]["arraySplitter"] extends string ? FieldType<T, K>[] : FieldType<T, K>) | OptionalNull<T, K>;
 };
 
-export default class ObjectSchema<T extends Schema> extends Collection<string, ParsedRow<T>> {
+export default class ObjectSchema<T extends ObjectSchemaBuilder> extends Collection<string, ParsedRow<T>> {
     schema: T
     rows: GoogleSpreadsheetRow[]
     primaryKey: string
