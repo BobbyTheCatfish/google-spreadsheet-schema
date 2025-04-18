@@ -54,7 +54,7 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
             const f = this.schema[field]
             if (!f.type) f.type = "string"
 
-            let value = row.get(f.key);
+            let value = row.get(f.key) ?? f.defaultValue ?? null;
             if (f.arraySplitter) {
                 const newValues = []
                 for (const v of value?.split(f.arraySplitter) ?? []) {

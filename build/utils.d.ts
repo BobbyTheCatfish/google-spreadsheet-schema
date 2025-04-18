@@ -15,5 +15,5 @@ export type ObjectSchemaField<T extends keyof TypeMap> = {
     defaultValue?: TypeMap[T];
 };
 export type DefaultType<T, A extends keyof T | undefined, D> = undefined extends A ? D : A extends keyof T ? A : D;
-export declare function valueMapper(value: any, field: ObjectSchemaField<keyof TypeMap>): string | number | boolean | Date | null;
-export declare function innerValueMapper(value: any, field: ObjectSchemaField<keyof TypeMap>): string | number | boolean | Date | null;
+export declare function valueMapper(value: any, field: ObjectSchemaField<keyof TypeMap>): any;
+export declare function innerValueMapper(value: any, field: ObjectSchemaField<keyof TypeMap>): any;

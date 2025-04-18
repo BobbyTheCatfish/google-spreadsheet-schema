@@ -26,6 +26,7 @@ export function valueMapper(value: any, field: ObjectSchemaField<keyof TypeMap>)
 }
 
 export function innerValueMapper(value: any, field: ObjectSchemaField<keyof TypeMap>) {
+    if (value === undefined || value === null) return value;
     switch (field.type) {
         case "number": {
             const num = parseFloat(value);
