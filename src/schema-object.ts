@@ -32,13 +32,13 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
         if (rows) this.rows = rows
         else this.rows = await sheet.getRows();
         
-        const key = this.schema[this.primaryKey].key
+        const key = this.schema[this.primaryKey]
 
         this.clear()
         for (const row of this.rows) {
-            const primaryKey = row.get(key)
+            const primaryKey = row.get(key.key)
             if (primaryKey && filter(row)) {
-                this.set(primaryKey, this.parseRow(row))
+                this.set(valueMapper(primaryKey, { key: primaryKey, type: key.type }) as any, this.parseRow(row))
             }
         }
     }

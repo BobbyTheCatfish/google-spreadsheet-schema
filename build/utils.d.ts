@@ -1,6 +1,5 @@
 import { GoogleSpreadsheetRow } from "google-spreadsheet";
-export type AcceptableKeys = string | number;
-export type Mapper<T, _K extends AcceptableKeys = string> = (row: GoogleSpreadsheetRow) => T;
+export type Mapper<T> = (row: GoogleSpreadsheetRow) => T;
 export type Filter = (row: GoogleSpreadsheetRow) => (boolean | null | undefined);
 export type TypeMap = {
     string: string;
