@@ -5,5 +5,5 @@ export default class ArraySchema<T extends keyof TypeMap = "string"> extends Arr
     key: string;
     type: keyof TypeMap;
     constructor(key: string, type?: DefaultType<T>);
-    load(sheet: GoogleSpreadsheetWorksheet, filter?: Filter, useExistingData?: boolean): Promise<void>;
+    load(sheet: GoogleSpreadsheetWorksheet, filter?: Filter, rows?: GoogleSpreadsheetRow[]): Promise<void>;
 }

@@ -13,10 +13,10 @@ export default class SetSchema<T extends keyof TypeMap = "string"> extends UtilS
         this.rows = []
     }
 
-    async load(sheet: GoogleSpreadsheetWorksheet, filter: Filter = () => true, useExistingData = false) {
-        if (!useExistingData || sheet.rowCount === 0) {
-            this.rows = await sheet.getRows();
-        }
+    async load(sheet: GoogleSpreadsheetWorksheet, filter: Filter = () => true, rows?: GoogleSpreadsheetRow[]) {
+        if (rows) this.rows = rows
+        else this.rows = await sheet.getRows();
+
         this.clear();
         for (const row of this.rows) {
             const key = row.get(this.key)

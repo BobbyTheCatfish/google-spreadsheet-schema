@@ -21,7 +21,7 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder> extends Collect
     rows: GoogleSpreadsheetRow[];
     primaryKey: string;
     constructor(primaryKey: string, schema: T);
-    load(sheet: GoogleSpreadsheetWorksheet, filter?: Filter, useExistingData?: boolean): Promise<void>;
+    load(sheet: GoogleSpreadsheetWorksheet, filter?: Filter, rows?: GoogleSpreadsheetRow[]): Promise<void>;
     private isBlank;
     private parseRow;
 }

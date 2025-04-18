@@ -7,5 +7,5 @@ export default class FunctionSchema<t> extends Collection<string, t> {
     primaryKey: string;
     mapper: Mapper<t>;
     constructor(primaryKey: string, mapper: Mapper<t>);
-    load(sheet: GoogleSpreadsheetWorksheet, filter?: Filter, useExistingData?: boolean): Promise<void>;
+    load(sheet: GoogleSpreadsheetWorksheet, filter?: Filter, rows?: GoogleSpreadsheetRow[]): Promise<void>;
 }

@@ -12,10 +12,10 @@ export default class ArraySchema<T extends keyof TypeMap = "string"> extends Arr
         this.rows = []
     }
 
-    async load(sheet: GoogleSpreadsheetWorksheet, filter: Filter = () => true, useExistingData = false) {
-        if (!useExistingData || sheet.rowCount === 0) {
-            this.rows = await sheet.getRows();
-        }
+    async load(sheet: GoogleSpreadsheetWorksheet, filter: Filter = () => true, rows?: GoogleSpreadsheetRow[]) {
+        if (rows) this.rows = rows
+        else this.rows = await sheet.getRows();
+        
         this.length = 0;
         for (const row of this.rows) {
             const key = row.get(this.key)
