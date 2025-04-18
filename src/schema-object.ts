@@ -55,18 +55,19 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder> extends Collect
     private parseRow(row: GoogleSpreadsheetRow): ParsedRow<T> {
         const result: any = {};
         for (const field in this.schema) {
-            const { type, key, arraySplitter, possiblyNull, defaultValue = null } = this.schema[field];
-            let value = row.get(key);
-            if (arraySplitter) {
+            const f = this.schema[field]
+            let value = row.get(f.key);
+            if (f.arraySplitter) {
                 const newValues = []
-                for (const v of value.split(arraySplitter)) {
+                for (const v of value?.split(f.arraySplitter) ?? []) {
                     if (this.isBlank(v)) continue;
-                    const newVal = valueMapper(v, type) || defaultValue
-                    if (newVal !== null) newValues.push(newVal)
+                    const newVal = valueMapper(v, f.type);
+                    if (newVal !== null) newValues.push(newVal);
                 }
+                value = newValues;
             } else {
-                value = valueMapper(value, type) || defaultValue
-                if (value === null && !possiblyNull) throw new Error(`Value for \`${field}\` was null when not expected`);
+                value = valueMapper(value, f.type)
+                if (value === null && !f.possiblyNull) throw new Error(`Value for \`${field}\` on row ${row.rowNumber} was null when not expected`);
             }
  
             result[field] = value;
