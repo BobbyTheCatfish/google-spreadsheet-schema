@@ -1,11 +1,9 @@
 import { Collection } from "@discordjs/collection";
 import { GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from "google-spreadsheet";
-import { Filter } from "./utils";
-
-type SupportedTypes = "string" | "number" | "boolean"| "date";
+import { DefaultType, Filter, TypeMap, valueMapper } from "./utils";
 
 type SchemaField = {
-    type: SupportedTypes;
+    type: keyof TypeMap;
     key: string;
     arraySplitter?: string;
     possiblyNull?: boolean
@@ -15,12 +13,7 @@ export type Schema = {
     [field: string]: SchemaField;
 };
 
-type TypeMap = {
-    string: string;
-    number: number;
-    boolean: boolean;
-    date: Date;
-};
+
 
 type OptionalNull<T extends Schema, K extends keyof T> = T[K]["possiblyNull"] extends true ? null : never
 
@@ -54,17 +47,6 @@ export default class ObjectSchema<T extends Schema> extends Collection<string, P
         }
     }
 
-    private valueMapper(value: any, type: SupportedTypes) {
-        switch (type) {
-            case "number": return parseFloat(value);
-            case "boolean": return value.toUpperCase() === "TRUE" || value === true;
-            case "string": return String(value);
-            case "date": return new Date(value);
-            default:
-                throw new Error(`Unsupported type: ${type}`);
-        }
-    }
-
     private isBlank(v: any) {
         return ["", undefined, null].includes(v)
     }
@@ -78,13 +60,13 @@ export default class ObjectSchema<T extends Schema> extends Collection<string, P
                 value = value
                     .split(arraySplitter)
                     .filter((v: any) => !this.isBlank(v))
-                    .map((v: any) => this.valueMapper(v, type))
+                    .map((v: any) => valueMapper(v, type))
             } else {
                 if (this.isBlank(value)) {
                     if (possiblyNull) value = null;
                     else throw new Error(`Value for \`${field}\` was null when not expected`);
                 } else {
-                    value = this.valueMapper(value, type)
+                    value = valueMapper(value, type)
                 }
             }
  
