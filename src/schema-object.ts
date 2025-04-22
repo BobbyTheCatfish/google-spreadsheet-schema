@@ -1,6 +1,6 @@
 import { Collection } from "@discordjs/collection";
 import { GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from "google-spreadsheet";
-import { Filter, ObjectSchemaField, TypeMap, valueMapper } from "./utils";
+import { DefaultType, Filter, ObjectSchemaField, TypeMap, valueMapper } from "./utils";
 
 
 export type ObjectSchemaBuilder = {
@@ -9,11 +9,12 @@ export type ObjectSchemaBuilder = {
 
 type OptionalNull<T extends ObjectSchemaBuilder, K extends keyof T> = T[K]["possiblyNull"] extends true ? T[K]["defaultValue"] extends null ? null : never : never
 
-type DefaultFieldType<T extends ObjectSchemaBuilder, K extends keyof T> = T[K]["type"] extends undefined ? TypeMap["string"] : TypeMap[Exclude<T[K]["type"], undefined>]
-type FieldType<T extends ObjectSchemaBuilder, K extends keyof T> = DefaultFieldType<T, K>
+type DefaultFieldType<T extends ObjectSchemaBuilder, K extends keyof T> = T[K]["type"] extends undefined ? string : TypeMap[Exclude<T[K]["type"], undefined>]
+
+type FieldType<T extends ObjectSchemaBuilder, K extends keyof T> = TypeMap[DefaultType<TypeMap, T[K]["type"], "string">]
 
 type ParsedRow<T extends ObjectSchemaBuilder> = {
-    [K in keyof T]: (T[K]["arraySplitter"] extends string ? FieldType<T, K>[] : FieldType<T, K>) | OptionalNull<T, K>;
+    [K in keyof T]: (T[K]["type"] extends ("stringSet" | "numSet") ? FieldType<T, K> : T[K]["splitter"] extends string ? FieldType<T, K>[] : FieldType<T, K>) | OptionalNull<T, K>;
 };
 
 export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof T> extends Collection<DefaultFieldType<T, K>, ParsedRow<T>> {
@@ -54,18 +55,24 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
             const f = this.schema[field]
             if (!f.type) f.type = "string"
 
+            let type = f.type;
+            if (type === "numSet") type = "number"
+            else if (type === "stringSet") type = "string"
+
             let value = row.get(f.key) ?? f.defaultValue ?? null;
-            if (f.arraySplitter) {
+            if (f.splitter) {
                 const newValues = []
-                for (const v of value?.split(f.arraySplitter) ?? []) {
+                for (const v of value?.split(f.splitter) ?? []) {
                     if (this.isBlank(v)) continue;
-                    const newVal = valueMapper(v, f);
+                    const newVal = valueMapper(v, { ...f, type });
                     if (newVal !== null) newValues.push(newVal);
                 }
-                value = newValues;
-            } else {
+                value = f.type.endsWith("Set") ? new Set(newValues) : newValues;
+            } else if (!f.type.endsWith("Set")) {
                 value = valueMapper(value, f)
                 if (value === null && !f.possiblyNull) throw new Error(`Value for \`${field}\` on row ${row.rowNumber} was null when not expected`);
+            } else {
+                throw new Error(`Expected property splitter for field ${f.key}`)
             }
  
             result[field] = value;

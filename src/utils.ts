@@ -9,14 +9,21 @@ export type TypeMap = {
     number: number;
     boolean: boolean;
     date: Date;
+    stringSet: Set<string>
+    numSet: Set<number>
 };
+
+type TypeMapWithoutSets = Omit<TypeMap, "stringSet" | "numSet"> & {
+    stringSet: string;
+    numSet: number
+}
 
 export type ObjectSchemaField<T extends keyof TypeMap> = {
     type?: DefaultType<TypeMap, T, "string">;
     key: string;
-    arraySplitter?: string;
-    possiblyNull?: boolean
-    defaultValue?: TypeMap[T]
+    splitter?: string;
+    possiblyNull?: boolean;
+    defaultValue?: TypeMapWithoutSets[T];
 };
 
 export type DefaultType<T, A extends keyof T | undefined, D> = undefined extends A ? D : A extends keyof T ? A : D
