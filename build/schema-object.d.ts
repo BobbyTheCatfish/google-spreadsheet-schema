@@ -14,9 +14,12 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
     schema: T;
     rows: GoogleSpreadsheetRow[];
     primaryKey: K;
+    sheet: GoogleSpreadsheetWorksheet | null;
     constructor(primaryKey: K, schema: T);
     load(sheet: GoogleSpreadsheetWorksheet, filter?: Filter, rows?: GoogleSpreadsheetRow[]): Promise<void>;
     private isBlank;
     private parseRow;
+    private reverseParseRow;
+    update(row: ParsedRow<T>): Promise<this>;
 }
 export {};

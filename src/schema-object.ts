@@ -1,5 +1,5 @@
 import { Collection } from "@discordjs/collection";
-import { GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from "google-spreadsheet";
+import { GoogleSpreadsheet, GoogleSpreadsheetRow, GoogleSpreadsheetWorksheet } from "google-spreadsheet";
 import { DefaultType, Filter, ObjectSchemaField, TypeMap, valueMapper } from "./utils";
 
 
@@ -17,13 +17,17 @@ type ParsedRow<T extends ObjectSchemaBuilder> = {
     [K in keyof T]: (T[K]["type"] extends ("stringSet" | "numSet") ? FieldType<T, K> : T[K]["splitter"] extends string ? FieldType<T, K>[] : FieldType<T, K>) | OptionalNull<T, K>;
 };
 
+
+
 export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof T> extends Collection<DefaultFieldType<T, K>, ParsedRow<T>> {
     schema: T
     rows: GoogleSpreadsheetRow[]
     primaryKey: K
+    sheet: GoogleSpreadsheetWorksheet | null
 
     constructor(primaryKey: K, schema: T) {
         super();
+        this.sheet = null;
         this.schema = schema;
         this.primaryKey = primaryKey;
         this.rows = []
@@ -33,6 +37,7 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
         if (rows) this.rows = rows
         else this.rows = await sheet.getRows();
         
+        this.sheet = sheet;
         const key = this.schema[this.primaryKey]
         if (!key.type) key.type = "string";
 
@@ -78,5 +83,56 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
             result[field] = value;
         }
         return result;
+    }
+
+    private reverseParseRow(row: ParsedRow<T>) {
+        const newRecord: Record<string, string> = {};
+        for (const field in row) {
+            const value = row[field]
+            const schemaProp = this.schema[field];
+            if (!schemaProp || !value) continue;
+            switch(schemaProp.type) {
+                case "number": {
+                    newRecord[schemaProp.key] = value.toString()
+                }
+                case "numSet": {
+                    const joined = Array.from(value as Set<number>).join(schemaProp.splitter ?? " ") || schemaProp.defaultValue?.toString() || ""
+                    newRecord[schemaProp.key] = joined;
+                }
+                case "boolean": {
+                    newRecord[schemaProp.key] = value === true ? "TRUE" : "FALSE"
+                }
+                case "string": {
+                    newRecord[schemaProp.key] = value.toString()
+                }
+                case "stringSet": {
+                    const joined = Array.from(value as Set<string>).join(schemaProp.splitter ?? " ") || schemaProp.defaultValue?.toString() || ""
+                    newRecord[schemaProp.key] = joined;
+                }
+                case "date": {
+                    newRecord[schemaProp.key] = (value as Date).valueOf().toString()
+                }
+            }
+        }
+        return newRecord
+    }
+
+    async update(row: ParsedRow<T>) {
+        const pkey = this.schema[this.primaryKey]
+        if (!pkey.type) pkey.type = "string";
+        const key = valueMapper(this.primaryKey, { key: pkey.key, type: pkey.type }) as any
+        const parsed = this.reverseParseRow(row)
+        if (!this.sheet) throw new Error(`No sheet set for schema with key ${String(this.primaryKey)}`)
+            
+        const found = this.rows.find(r => r.get(pkey.key) === String(row[this.primaryKey]))
+        if (found) {
+            this.ensure(key, () => row)
+            found.assign(parsed)
+            await found.save()
+        } else {
+            await this.sheet.addRow(parsed)
+        }
+        super.set(key, row)
+        return this
     }
 }
