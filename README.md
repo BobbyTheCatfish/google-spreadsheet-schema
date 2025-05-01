@@ -1,55 +1,112 @@
 # Google-Spreadsheet-Schema
-A schema based plugin for the 3.x version of the [Google-Spreadsheet](https://www.npmjs.com/package/google-spreadsheet/v/3.3.0) npm package
+A schema based plugin for the 4.x version of the [Google-Spreadsheet](https://www.npmjs.com/package/google-spreadsheet/v/3.3.0) npm package
 
 I mostly made this because
 1) I didn't realize they introduced a schema option in v4, and
 2) I didn't really like the implimentaion
+3) It doesn't actually parse values
 
-## To get started:
+# To get started:
 
 ### Create a document, authorize it, and load the info
 
 ```js
 import { GoogleSpreadsheet } from 'google-spreadsheet'
 // or const { GoogleSpreadsheet } = require('google-spreadsheet')
+import  { JWT } from "google-auth-library";
+
+const auth = {
+  email: keys.client_email,
+  key: keys.private_key,
+  scopes: ['https://www.googleapis.com/auth/spreadsheets']
+};
+
+const account = new JWT(auth);
+
 
 // Initialize the sheet - doc ID is the long id in the sheets URL
-const doc = new GoogleSpreadsheet('<the sheet ID from the url>');
+const doc = new GoogleSpreadsheet('<the sheet ID from the url>', account);
 
-await doc.useServiceAccountAuth(config.auth); // authorizes the document
 await doc.loadInfo(); // loads document properties and worksheets
 ```
 
-### Create a new Schema
+Now you're ready to make a schema! There are a few different types.
+
+## Object Schemas
+```js
+import { ObjectSchema } from 'google-spreadsheet-schema'
+// or const { ObjectSchema } = require('google-spreadsheet-schema')
+
+const treeSchema = new ObjectSchema("Tree Name", {
+  // object property name
+  name: {
+    type: "string",
+    key: "Tree Name" // Column Name
+  }
+  // object property name
+  color: {
+    type: "string",
+    key: "Tree Color" // Column Name
+  },
+  // object property name
+  fruit: {
+    type: "number",
+    key: "Fruit Count" // Column Name
+  }
+})
+
+await treeSchema.load(doc.sheetsByTitle["Trees"])
+```
+
+## Array and Set Schemas
+These provide single-column parsing. The syntax is the same for arrays and sets
+```js
+import { SetSchema } from 'google-spreadsheet-schema'
+
+const colorSchema = new SetSchema("Tree Color", "string")
+
+await colorSchema.load(doc.sheetsByTitle["Trees"])
+```
+
+## Function Schemas
+Sometimes data types are more complicated than strings or numbers. Function Schemas take rows and run them through a custom function that you pass into it.
 
 ```js
-import { Schema } from 'google-spreadsheet-scheme'
-// or const { Schema } = require('google-spreadsheet-schema')
+import { FunctionSchema } from 'google-spreadsheet-schema'
 
-const schema = new Schema(doc, {
-  // Sheet Name
-  Trees: {
-    // Column Names
-    Height: String,
-    "Fruit Type": String,
-  },
-  // Sheet Name
-  Bushes: {
-    // Column Names
-    Bushiness: String,
-    "Fruit Count": String
+const pointSchema = new FunctionSchema("UserId", (row) => {
+  const user = client.users.get(row.get("UserId"));
+
+  return {
+    username: user.username,
+    points: parseInt(row.get("Points"))
   }
+})
+
+await pointSchema.load(doc.sheetsByTitle["Users"])
+```
+
+# Advanced Usage
+
+## Filters
+When calling `load()`, you can pass in a filter. If it passes the filter, it will process the row and add it to the dataset.
+
+```js
+await pointSchema.load(doc.sheetsByTitle["Users"], (row) => {
+  return client.users.has(row.get("UserId"));
 })
 ```
 
-<b>More features like more types besides string, validation, and slightly less clunky wording are coming in a future version.</b>
+## Pre-fetched Rows
+Sometimes you might need to make multiple schemas for the same sheet. In that case, you can do something like this to avoid API rate limits.
 
-## Using the schema
-Class methods `Schema.getRows(sheetName)`, `Schema.addRow(sheetName)`, and `Schema.addRows(sheetName)` are effectively the same thing as `doc.sheetsByTitle[sheetName].(getRows|addRow|addRows)`, but provide intellisense.
+```js
+const schema1 = new ObjectSchema(...)
+const schema2 = new ObjectSchema(...)
 
-`getSheet` acts like `doc.sheetsByTitle[sheetName]`, but provides a `GoogleSpreadsheetWorksheet` instead of `never`.
+const sheet = doc.sheetsByTitle["Sheet Name"]
+const rows = await sheet.getRows();
 
-`Schema.doc` provides the original document passed in. It's reccomended to use this instead of directly referencing the doc we created.
-
-`Schema.scheme` provides the input schema and can be modified. The functions above only provide types, so modifying `Schema.scheme` doesn't change anything in runtime.
-
+await schema1.load(sheet, undefined, rows)
+await schema2.load(sheet, undefined, rows)
+```
