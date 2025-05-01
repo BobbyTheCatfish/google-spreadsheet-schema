@@ -2,6 +2,10 @@ import { GoogleSpreadsheetRow } from "google-spreadsheet"
 
 export type Mapper<T> = (row: GoogleSpreadsheetRow) => T
 
+/**
+ * Determines if a row is valid and should be included
+ * @param row A row in the sheet
+ */
 export type Filter = (row: GoogleSpreadsheetRow) => (boolean | null | undefined)
 
 export type TypeMap = {
