@@ -5,7 +5,7 @@ export default class UtilSet<T> extends Set<T> {
     first(amount: number): T[];
     last(): T | undefined;
     last(amount: number): T[];
-    at(index: number): NonNullable<T> | undefined;
+    at(index: number): any;
     random(): T | undefined;
     random(amount: number): T[];
     reverse(): this;
