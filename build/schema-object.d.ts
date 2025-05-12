@@ -39,7 +39,6 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
      *
      * Calls ObjectSchema.set() and either GoogleSpreadsheetWorksheet.addRow() or .assign() and .save()
      * @param row The new or updated row
-     * @returns
      */
     update(row: ParsedRow<T>): Promise<this>;
 }
