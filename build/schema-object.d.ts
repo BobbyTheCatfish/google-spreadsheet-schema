@@ -32,7 +32,7 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
      */
     load(sheet: GoogleSpreadsheetWorksheet, filter?: Filter, rows?: GoogleSpreadsheetRow[]): Promise<void>;
     private isBlank;
-    private parseRow;
+    parseRow(row: GoogleSpreadsheetRow): ParsedRow<T>;
     private reverseParseRow;
     /**
      * Saves a new or updated row

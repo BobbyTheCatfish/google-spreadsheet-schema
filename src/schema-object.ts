@@ -67,7 +67,7 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
         return ["", undefined, null].includes(v)
     }
 
-    private parseRow(row: GoogleSpreadsheetRow): ParsedRow<T> {
+    parseRow(row: GoogleSpreadsheetRow): ParsedRow<T> {
         const result: any = {};
         for (const field in this.schema) {
             const f = this.schema[field]
