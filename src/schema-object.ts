@@ -149,7 +149,8 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
             found.assign(parsed)
             await found.save()
         } else {
-            await this.sheet.addRow(parsed)
+            const row = await this.sheet.addRow(parsed)
+            this.rows.push(row);
         }
         super.set(key, row)
         return this
