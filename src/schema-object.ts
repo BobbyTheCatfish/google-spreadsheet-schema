@@ -137,8 +137,7 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
         const parsed = this.reverseParseRow(row)        
 
         const found = this.rows.find(r => r.get(pkey.key) === String(row[this.primaryKey]))
-        console.log(key)
-        this.ensure(key, () => row)
+        this.set(key, row);
 
         if (found) {
             found.assign(parsed)
