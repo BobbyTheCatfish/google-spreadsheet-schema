@@ -137,8 +137,10 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
         const parsed = this.reverseParseRow(row)        
 
         const found = this.rows.find(r => r.get(pkey.key) === String(row[this.primaryKey]))
+        console.log(key)
+        this.ensure(key, () => row)
+
         if (found) {
-            this.ensure(key, () => row)
             found.assign(parsed)
             return { found, key, row }
         } else {
@@ -155,8 +157,6 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
         if (!this.sheet) throw new Error(`No sheet set for schema with key ${String(this.primaryKey)}`);
 
         if (Array.isArray(row)) {
-            const key = this.schema[this.primaryKey];
-
             const updates = row.map(r => this.updateOne(r));
             const newRows = updates.filter(u => u.parsed);
             const inserted = await this.sheet.addRows(newRows.map(r => r.parsed!))
@@ -166,23 +166,14 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
 
             for (const r of inserted) {
                 this.rows.push(r)
-                super.set(r.get(key.key), this.parseRow(r))
-            }
-
-            for (const update of updated) {
-                super.set(update.key, update.row)
             }
 
         } else {
             const r = this.updateOne(row);
             if (r.found) {
                 await r.found.save()
-                console.log(r)
-                super.set(r.key, r.row)
             } else {
                 this.rows.push(await this.sheet.addRow(r.parsed));
-                console.log(r)
-                super.set(r.key, row);
             }
         }
         return this
