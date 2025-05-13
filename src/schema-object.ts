@@ -77,7 +77,8 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
             if (type === "numSet") type = "number"
             else if (type === "stringSet") type = "string"
 
-            let value = row.get(f.key) ?? f.defaultValue ?? null;
+            let value = row.get(f.key);
+            
             if (f.splitter) {
                 const newValues = []
                 for (const v of value?.split(f.splitter) ?? []) {
@@ -87,7 +88,7 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
                 }
                 value = f.type.endsWith("Set") ? new Set(newValues) : newValues;
             } else if (!f.type.endsWith("Set")) {
-                value = valueMapper(value, f)
+                value = valueMapper(value, f) ?? f.defaultValue ?? null;
                 if (value === null && !f.possiblyNull) throw new Error(`Value for \`${field}\` on row ${row.rowNumber} was null when not expected`);
             } else {
                 throw new Error(`Expected property splitter for field ${f.key}`)
