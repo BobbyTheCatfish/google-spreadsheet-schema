@@ -133,7 +133,7 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
     private updateOne(row: ParsedRow<T>) {
         const pkey = this.schema[this.primaryKey]
         if (!pkey.type) pkey.type = "string";
-        const key = valueMapper(this.primaryKey, { key: pkey.key, type: pkey.type }) as any
+        const key = valueMapper(row[this.primaryKey], { key: pkey.key, type: pkey.type }) as any
         const parsed = this.reverseParseRow(row)        
 
         const found = this.rows.find(r => r.get(pkey.key) === String(row[this.primaryKey]))
