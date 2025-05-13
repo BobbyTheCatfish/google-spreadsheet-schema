@@ -130,29 +130,62 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
         return newRecord
     }
 
+    private updateOne(row: ParsedRow<T>) {
+        const pkey = this.schema[this.primaryKey]
+        if (!pkey.type) pkey.type = "string";
+        const key = valueMapper(this.primaryKey, { key: pkey.key, type: pkey.type }) as any
+        const parsed = this.reverseParseRow(row)        
+
+        const found = this.rows.find(r => r.get(pkey.key) === String(row[this.primaryKey]))
+        if (found) {
+            this.ensure(key, () => row)
+            found.assign(parsed)
+            return { found, key, row }
+        } else {
+            return { key, row, parsed }
+            // const row = await this.sheet.addRow(parsed)
+            // this.rows.push(row);
+        }
+        super.set(key, row)
+    }
     /**
      * Saves a new or updated row
      * 
      * Calls ObjectSchema.set() and either GoogleSpreadsheetWorksheet.addRow() or .assign() and .save()
      * @param row The new or updated row
      */
-    async update(row: ParsedRow<T>) {
-        const pkey = this.schema[this.primaryKey]
-        if (!pkey.type) pkey.type = "string";
-        const key = valueMapper(this.primaryKey, { key: pkey.key, type: pkey.type }) as any
-        const parsed = this.reverseParseRow(row)
-        if (!this.sheet) throw new Error(`No sheet set for schema with key ${String(this.primaryKey)}`)
-            
-        const found = this.rows.find(r => r.get(pkey.key) === String(row[this.primaryKey]))
-        if (found) {
-            this.ensure(key, () => row)
-            found.assign(parsed)
-            await found.save()
+    async update(row: ParsedRow<T> | ParsedRow<T>[]) {
+        if (!this.sheet) throw new Error(`No sheet set for schema with key ${String(this.primaryKey)}`);
+
+        if (Array.isArray(row)) {
+            const key = this.schema[this.primaryKey];
+
+            const updates = row.map(r => this.updateOne(r));
+            const newRows = updates.filter(u => u.parsed);
+            const savedRows = await this.sheet.addRows(newRows.map(r => r.parsed!))
+
+            const existingRows = updates.filter(u => u.found);
+            await Promise.all(existingRows.map(u => u.found!.save()))
+
+            for (const saved of savedRows) {
+                this.rows.push(saved)
+                super.set(saved.get(key.key), this.parseRow(saved))
+            }
+
+            for (const existing of existingRows) {
+                super.set(existing.key, existing.row)
+            }
+
         } else {
-            const row = await this.sheet.addRow(parsed)
-            this.rows.push(row);
+            const r = this.updateOne(row);
+            if (r.found) {
+                await r.found.save()
+                super.set(r.key, r.row)
+            } else {
+                await this.sheet.addRow(r.parsed);
+                super.set(r.key, row);
+            }
         }
-        super.set(key, row)
         return this
     }
 }

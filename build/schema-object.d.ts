@@ -34,12 +34,13 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
     private isBlank;
     parseRow(row: GoogleSpreadsheetRow): ParsedRow<T>;
     private reverseParseRow;
+    private updateOne;
     /**
      * Saves a new or updated row
      *
      * Calls ObjectSchema.set() and either GoogleSpreadsheetWorksheet.addRow() or .assign() and .save()
      * @param row The new or updated row
      */
-    update(row: ParsedRow<T>): Promise<this>;
+    update(row: ParsedRow<T> | ParsedRow<T>[]): Promise<this>;
 }
 export {};
