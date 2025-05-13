@@ -143,10 +143,7 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
             return { found, key, row }
         } else {
             return { key, row, parsed }
-            // const row = await this.sheet.addRow(parsed)
-            // this.rows.push(row);
         }
-        super.set(key, row)
     }
     /**
      * Saves a new or updated row
@@ -162,27 +159,29 @@ export default class ObjectSchema<T extends ObjectSchemaBuilder, K extends keyof
 
             const updates = row.map(r => this.updateOne(r));
             const newRows = updates.filter(u => u.parsed);
-            const savedRows = await this.sheet.addRows(newRows.map(r => r.parsed!))
+            const inserted = await this.sheet.addRows(newRows.map(r => r.parsed!))
 
-            const existingRows = updates.filter(u => u.found);
-            await Promise.all(existingRows.map(u => u.found!.save()))
+            const updated = updates.filter(u => u.found);
+            await Promise.all(updated.map(u => u.found!.save()))
 
-            for (const saved of savedRows) {
-                this.rows.push(saved)
-                super.set(saved.get(key.key), this.parseRow(saved))
+            for (const r of inserted) {
+                this.rows.push(r)
+                super.set(r.get(key.key), this.parseRow(r))
             }
 
-            for (const existing of existingRows) {
-                super.set(existing.key, existing.row)
+            for (const update of updated) {
+                super.set(update.key, update.row)
             }
 
         } else {
             const r = this.updateOne(row);
             if (r.found) {
                 await r.found.save()
+                console.log(r)
                 super.set(r.key, r.row)
             } else {
-                await this.sheet.addRow(r.parsed);
+                this.rows.push(await this.sheet.addRow(r.parsed));
+                console.log(r)
                 super.set(r.key, row);
             }
         }
