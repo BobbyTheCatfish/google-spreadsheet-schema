@@ -1,6 +1,6 @@
 {
   "name": "google-spreadsheet-schema",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A schema based plugin for the 3.x version of the [Google-Spreadsheet](https://www.npmjs.com/package/google-spreadsheet/v/3.3.0) npm package",
   "main": "build/index.js",
   "scripts": {
